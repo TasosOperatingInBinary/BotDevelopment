@@ -48,6 +48,11 @@ dependencies {
     // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
     implementation group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.7.2'
     jooqGenerator group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.7.2'
+
+    // https://developers.google.com/api-client-library/java
+    compile 'com.google.api-client:google-api-client:1.30.8'
+    compile 'com.google.auth:google-auth-library-oauth2-http:0.24.1'
+    compile 'com.google.apis:google-api-services-calendar:v3-rev20201028-1.30.10'
 }
 
 jooq {

@@ -40,6 +40,8 @@ public class CommandManager extends ListenerAdapter  {
                 new GifCommand(config.getValue(ConfigKey.GIPHY_KEY)),
                 new PollCommand(),
                 new CointossCommand(),
+                new CalendarViewCommand(),
+                new CalendarSetCommand(),
         };
 
         // for each command
