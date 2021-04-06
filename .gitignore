@@ -113,3 +113,6 @@ fabric.properties
 
 # jOOQ generated files
 src/jooq/*
+
+# log4j files
+*.log.gz

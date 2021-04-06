@@ -4,6 +4,7 @@ import com.google.api.services.calendar.Calendar;
 import com.vdurmont.emoji.EmojiParser;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.acm.auth.db.Tables;
@@ -20,13 +21,12 @@ import java.sql.DriverManager;
 import java.awt.*;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.SQLTimeoutException;
 
 /**
  * Represents a command that displays the description of the calendar that corresponds to the guild
  * from which was invoked.
  */
-public class CalendarViewCommand extends Command{
+public class CalendarViewCommand extends Command {
     private static final Logger LOGGER = LogManager.getLogger(CalendarViewCommand.class);
     private static final Dotenv env = Dotenv.load();
     private static final String url = "jdbc:mariadb://localhost:3306";
@@ -38,11 +38,16 @@ public class CalendarViewCommand extends Command{
      */
     public CalendarViewCommand() {
         super(
-            "calview",
-                "Displays the description of the calendar that corresponds to the guild from " +
-                    "which was invoked.",
-            false,
-            new String[] {"cview"});
+        "calview", // name
+        "Displays the description of the calendar that corresponds to the guild the command was executed.", // description
+        true, // guildOnly
+        false, // devOnly
+        new String[] {"cview"}, // alias
+        0, // minArgs
+        0, // maxArgs
+        "", // usage
+        new Permission[] { Permission.MESSAGE_EMBED_LINKS }, // botPerms
+        new Permission[] {}); // usrPerms
     }
 
     @Override
@@ -59,7 +64,7 @@ public class CalendarViewCommand extends Command{
 
         } catch (NoDataFoundException e) { // the query returned no rows
             event.getChannel().sendMessage("There is no calendar associated with the current server! Please set the " +
-                    "server's calendar with the @@@@ command and then try again executing this command. "
+                    "server's calendar with the **calset** command and then try again executing this command. "
                     + EmojiParser.parseToUnicode(":blush:"))
                     .queue();
             return;
@@ -74,17 +79,17 @@ public class CalendarViewCommand extends Command{
         }
 
         // the query returned successfully the calendar id
-        String CALENDAR_ID= (String)calendarRecord.get(1);
+        String CALENDAR_ID = calendarRecord.get(Tables.CALENDARS.CALENDAR_ID);
         Calendar service = GoogleCalendar.getCalendarService();
 
         try {
-            // get the calendar that corresponds to the guild from which the command was invoked
+            // get the calendar that corresponds to the guild from which the command was executed
             com.google.api.services.calendar.model.Calendar calendar = service
                 .calendars()
                 .get(CALENDAR_ID)
                 .execute();
 
-            MessageEmbed message = getMessageEmbed(calendar,event,args);
+            MessageEmbed message = buildMessageEmbed(calendar,event,args);
 
             // send the message in the channel the command was invoked
             event.getChannel()
@@ -92,10 +97,11 @@ public class CalendarViewCommand extends Command{
                 .queue();
 
         } catch (IOException exception) {
-            LOGGER.error(exception.getMessage());
+            LOGGER.warn(exception.getMessage());
             event.getChannel()
                 .sendMessage("Could not retrieve the information about calendar. I can't" +
-                        " execute the command. Please contact the developer team.")
+                        " execute the command. Maybe the server's calendar id is not valid. Also don't forget sharing " +
+                        "the calendar with me and giving me access to managing events! " + EmojiParser.parseToUnicode(":spiral_calendar_pad:"))
                 .queue();
         }
     }
@@ -105,8 +111,8 @@ public class CalendarViewCommand extends Command{
      * @param calendar the calendar that corresponds to the guild from which the command was invoked
      * @return the embed message as {@link MessageEmbed}
      */
-    private static MessageEmbed getMessageEmbed(com.google.api.services.calendar.model.Calendar calendar,
-                                                MessageReceivedEvent event, String[] args) {
+    private static MessageEmbed buildMessageEmbed(com.google.api.services.calendar.model.Calendar calendar,
+                                                  MessageReceivedEvent event, String[] args) {
 
         StringBuilder stringBuilder = new StringBuilder(calendar.getSummary());
         stringBuilder.append("\n\n")
